@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, RefreshCw, Edit, Loader2, Send, Download } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { callPlanningAgent, callShortAskAgent, callGenericAgent } from '@/services/dustApi';
@@ -13,6 +14,8 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
+
+type AgentType = 'planning' | 'shortAsk' | 'generic';
 
 const DocumentExecution = () => {
   const navigate = useNavigate();
@@ -25,6 +28,8 @@ const DocumentExecution = () => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [selectedRefineAgent, setSelectedRefineAgent] = useState<AgentType>('shortAsk');
+  const [selectedChatAgent, setSelectedChatAgent] = useState<AgentType>('generic');
 
   useEffect(() => {
     if (!planningResult || !credentials) {
@@ -65,6 +70,56 @@ const DocumentExecution = () => {
     }
   };
 
+  const getAgentFunction = (agentType: AgentType) => {
+    switch (agentType) {
+      case 'planning':
+        return callPlanningAgent;
+      case 'shortAsk':
+        return callShortAskAgent;
+      case 'generic':
+        return callGenericAgent;
+    }
+  };
+
+  const getAgentId = (agentType: AgentType) => {
+    if (!credentials) return '';
+    switch (agentType) {
+      case 'planning':
+        return credentials.planningAgentId;
+      case 'shortAsk':
+        return credentials.shortAskAgentId;
+      case 'generic':
+        return credentials.genericAgentId;
+    }
+  };
+
+  const getAgentName = (agentType: AgentType) => {
+    switch (agentType) {
+      case 'planning':
+        return 'Planning Agent';
+      case 'shortAsk':
+        return 'Short Ask Agent';
+      case 'generic':
+        return 'Generic Agent';
+    }
+  };
+
+  const buildContextualPrompt = (userPrompt: string, includeDocument: boolean = true) => {
+    const contextParts: string[] = [];
+    
+    if (editablePlan) {
+      contextParts.push(`**Execution Plan:**\n${editablePlan}`);
+    }
+    
+    if (includeDocument && documentText) {
+      contextParts.push(`**Current Document:**\n${documentText}`);
+    }
+    
+    contextParts.push(`**Task:**\n${userPrompt}`);
+    
+    return contextParts.join('\n\n---\n\n');
+  };
+
   const handleRefineText = async () => {
     if (!credentials || !documentText.trim()) {
       toast({
@@ -77,18 +132,24 @@ const DocumentExecution = () => {
 
     setIsRefining(true);
     try {
-      const result = await callShortAskAgent(
+      const agentFunction = getAgentFunction(selectedRefineAgent);
+      const contextualPrompt = buildContextualPrompt(
+        `Please refine and improve the following text while keeping the execution plan in mind:\n\n${documentText}`,
+        false
+      );
+      
+      const result = await agentFunction(
         {
           workspaceId: credentials.workspaceId,
           apiKey: credentials.apiKey,
-          agentId: credentials.shortAskAgentId,
+          agentId: getAgentId(selectedRefineAgent),
         },
-        documentText
+        contextualPrompt
       );
       setDocumentText(result);
       toast({
         title: 'Text Refined',
-        description: 'Your text has been refined successfully.',
+        description: `Refined using ${getAgentName(selectedRefineAgent)}`,
       });
     } catch (error) {
       console.error('Refine error:', error);
@@ -107,17 +168,21 @@ const DocumentExecution = () => {
 
     const userMessage: Message = { role: 'user', content: chatInput };
     setChatMessages((prev) => [...prev, userMessage]);
+    const currentInput = chatInput;
     setChatInput('');
     setIsChatLoading(true);
 
     try {
-      const result = await callGenericAgent(
+      const agentFunction = getAgentFunction(selectedChatAgent);
+      const contextualPrompt = buildContextualPrompt(currentInput);
+      
+      const result = await agentFunction(
         {
           workspaceId: credentials.workspaceId,
           apiKey: credentials.apiKey,
-          agentId: credentials.genericAgentId,
+          agentId: getAgentId(selectedChatAgent),
         },
-        chatInput
+        contextualPrompt
       );
       const assistantMessage: Message = { role: 'assistant', content: result };
       setChatMessages((prev) => [...prev, assistantMessage]);
@@ -246,25 +311,49 @@ const DocumentExecution = () => {
                   placeholder="Start writing your document here, or paste text to refine..."
                   className="flex-1 resize-none bg-background min-h-[200px]"
                 />
-                <Button
-                  onClick={handleRefineText}
-                  disabled={isRefining || !documentText.trim()}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 w-full gap-2"
-                >
-                  {isRefining ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Refining...
-                    </>
-                  ) : (
-                    'Refine Text'
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Select value={selectedRefineAgent} onValueChange={(value: AgentType) => setSelectedRefineAgent(value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select agent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="planning">Planning Agent</SelectItem>
+                      <SelectItem value="shortAsk">Short Ask Agent</SelectItem>
+                      <SelectItem value="generic">Generic Agent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleRefineText}
+                    disabled={isRefining || !documentText.trim()}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 flex-1 gap-2"
+                  >
+                    {isRefining ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Refining...
+                      </>
+                    ) : (
+                      'Refine Text'
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {/* Chat Section */}
               <div className="flex-1 flex flex-col space-y-2">
-                <h2 className="text-xl font-semibold text-foreground">Chat with Execution Plan</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-foreground">Agent Chat</h2>
+                  <Select value={selectedChatAgent} onValueChange={(value: AgentType) => setSelectedChatAgent(value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select agent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="planning">Planning Agent</SelectItem>
+                      <SelectItem value="shortAsk">Short Ask Agent</SelectItem>
+                      <SelectItem value="generic">Generic Agent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex-1 border border-border rounded-md bg-muted/30 p-4 overflow-y-auto space-y-3 min-h-[200px]">
                   {chatMessages.length === 0 && (
                     <p className="text-muted-foreground text-sm text-center py-8">
@@ -290,7 +379,7 @@ const DocumentExecution = () => {
                   {isChatLoading && (
                     <div className="flex justify-start">
                       <div className="bg-card text-card-foreground border border-border rounded-lg px-4 py-2">
-                        <p className="text-sm text-muted-foreground">Generic Agent is thinking...</p>
+                        <p className="text-sm text-muted-foreground">{getAgentName(selectedChatAgent)} is thinking...</p>
                       </div>
                     </div>
                   )}
