@@ -199,10 +199,15 @@ const DocumentExecution = () => {
   };
 
   const handleCopyPlanToEditor = () => {
-    setDocumentText(editablePlan);
+    // Extract only the main document content, omit clarifying questions section
+    const clarifyingQuestionsMarker = /##?\s*Quick\s+clarifying\s+questions/i;
+    const parts = editablePlan.split(clarifyingQuestionsMarker);
+    const documentContent = parts[0].trim();
+    
+    setDocumentText(documentContent);
     toast({
       title: 'Plan Copied',
-      description: 'Execution plan copied to document editor.',
+      description: 'Document topic copied to editor (clarifying questions omitted).',
     });
   };
 
@@ -255,25 +260,26 @@ const DocumentExecution = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-[calc(100vh-120px)]">
           {/* Left Column - Execution Plan */}
           <div className="lg:col-span-2 flex flex-col space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <h2 className="text-xl font-semibold text-foreground">Execution Plan</h2>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleCopyPlanToEditor}
-                  className="gap-2"
+                  className="gap-1.5"
                 >
-                  <Copy className="h-4 w-4" />
-                  Copy to Editor
+                  <Copy className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Copy to Editor</span>
+                  <span className="sm:hidden">Copy</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditMode(!isEditMode)}
-                  className="gap-2"
+                  className="gap-1.5"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-3.5 w-3.5" />
                   {isEditMode ? 'Done' : 'Edit'}
                 </Button>
                 <Button
@@ -281,12 +287,12 @@ const DocumentExecution = () => {
                   size="sm"
                   onClick={handleRegeneratePlan}
                   disabled={isRegenerating}
-                  className="gap-2"
+                  className="gap-1.5"
                 >
                   {isRegenerating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className="h-3.5 w-3.5" />
                   )}
                   Regenerate
                 </Button>
