@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, RefreshCw, Edit, Loader2, Send, Download, Copy } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Edit, Loader2, Send, Download, Copy, FileText } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { callPlanningAgent, callShortAskAgent, callGenericAgent } from '@/services/dustApi';
 import { toast } from '@/hooks/use-toast';
@@ -211,6 +211,14 @@ const DocumentExecution = () => {
     });
   };
 
+  const handleApplyResponseToDocument = (content: string) => {
+    setDocumentText(content);
+    toast({
+      title: 'Applied to Document',
+      description: 'Agent response has been copied to the document editor.',
+    });
+  };
+
   const handleExport = () => {
     const blob = new Blob([documentText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -388,14 +396,27 @@ const DocumentExecution = () => {
                       key={idx}
                       className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div
-                        className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                          msg.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-card text-card-foreground border border-border'
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end' : 'items-start'} max-w-[80%]`}>
+                        <div
+                          className={`rounded-lg px-4 py-2 ${
+                            msg.role === 'user'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-card text-card-foreground border border-border'
+                          }`}
+                        >
+                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        </div>
+                        {msg.role === 'assistant' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleApplyResponseToDocument(msg.content)}
+                            className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            <FileText className="h-3 w-3" />
+                            Apply to Document
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
