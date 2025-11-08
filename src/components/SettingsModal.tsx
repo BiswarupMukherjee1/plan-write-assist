@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/AppContext';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -49,46 +48,18 @@ const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
   const loadCredentials = async () => {
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: 'Authentication Required',
-          description: 'Please sign in to save credentials.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('dust_credentials')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        setWorkspaceId(data.workspace_id);
-        setApiKey(data.api_key);
-        setPlanningAgentId(data.planning_agent_id);
-        setShortAskAgentId(data.short_ask_agent_id);
-        setGenericAgentId(data.generic_agent_id);
-        
-        setCredentials({
-          workspaceId: data.workspace_id,
-          apiKey: data.api_key,
-          planningAgentId: data.planning_agent_id,
-          shortAskAgentId: data.short_ask_agent_id,
-          genericAgentId: data.generic_agent_id,
-        });
+      const stored = localStorage.getItem('dust_credentials');
+      if (stored) {
+        const data = JSON.parse(stored);
+        setWorkspaceId(data.workspaceId);
+        setApiKey(data.apiKey);
+        setPlanningAgentId(data.planningAgentId);
+        setShortAskAgentId(data.shortAskAgentId);
+        setGenericAgentId(data.genericAgentId);
+        setCredentials(data);
       }
     } catch (error) {
       console.error('Load credentials error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load credentials',
-        variant: 'destructive',
-      });
     } finally {
       setIsLoading(false);
     }
@@ -106,38 +77,16 @@ const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
     setIsSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: 'Authentication Required',
-          description: 'Please sign in to save credentials.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
       const credentialData = {
-        user_id: user.id,
-        workspace_id: workspaceId,
-        api_key: apiKey,
-        planning_agent_id: planningAgentId,
-        short_ask_agent_id: shortAskAgentId,
-        generic_agent_id: genericAgentId,
-      };
-
-      const { error } = await supabase
-        .from('dust_credentials')
-        .upsert(credentialData, { onConflict: 'user_id' });
-
-      if (error) throw error;
-
-      setCredentials({
         workspaceId,
         apiKey,
         planningAgentId,
         shortAskAgentId,
         genericAgentId,
-      });
+      };
+
+      localStorage.setItem('dust_credentials', JSON.stringify(credentialData));
+      setCredentials(credentialData);
 
       toast({
         title: 'Saved',
