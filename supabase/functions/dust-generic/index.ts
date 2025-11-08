@@ -65,7 +65,9 @@ serve(async (req) => {
     // Extract the agent's response content
     let content = '';
     if (data.conversation?.content) {
-      const agentMessages = data.conversation.content.filter((msg: any) => 
+      // Flatten the nested array structure and find agent messages
+      const allMessages = data.conversation.content.flat();
+      const agentMessages = allMessages.filter((msg: any) => 
         msg.type === 'agent_message' && msg.content
       );
       
