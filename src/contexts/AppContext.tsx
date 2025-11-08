@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface DustCredentials {
   workspaceId: string;
@@ -26,6 +26,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [planningResult, setPlanningResult] = useState<string | null>(null);
   const [originalInput, setOriginalInput] = useState<string | null>(null);
   const [documentTemplate, setDocumentTemplate] = useState<string | null>(null);
+
+  // Load credentials from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('dust_credentials');
+      if (stored) {
+        const data = JSON.parse(stored);
+        setCredentials(data);
+      }
+    } catch (error) {
+      console.error('Failed to load credentials from localStorage:', error);
+    }
+  }, []);
 
   return (
     <AppContext.Provider
