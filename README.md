@@ -1,6 +1,6 @@
 # AI-Powered Document Assistant
 
-An intelligent document creation and refinement platform powered by Dust AI agents. This application helps you generate, edit, and improve documents through AI-assisted planning, quick analysis, and iterative refinement.
+An intelligent document creation and refinement platform powered by Dust AI agents. This application helps you generate, edit, and improve documents through AI-assisted planning, quick analysis, and iterative refinement built with Loveable, Dust(for Amaazing AI Agents) and Open AI GPT 5 models.
 
 ## 🌟 Features
 
@@ -24,6 +24,10 @@ An intelligent document creation and refinement platform powered by Dust AI agen
 - **AI Integration**: Dust AI API with custom agent configurations
 - **Routing**: React Router v6
 
+## Architecture:
+<img width="6218" height="2416" alt="Untitled diagram-2025-11-08-165148" src="https://github.com/user-attachments/assets/7bd763ee-0b3e-4c65-8bb7-f826d5f487a3" />
+
+
 ## 📋 Prerequisites
 
 Before you begin, ensure you have:
@@ -31,6 +35,7 @@ Before you begin, ensure you have:
 - Node.js (v18 or higher) and npm installed - [Install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 - A Dust AI account with API access
 - Three configured Dust AI agents (Planning, Short Ask, Generic)
+
 
 ## 🔧 Installation
 
