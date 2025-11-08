@@ -7,6 +7,7 @@ import { ArrowLeft, RefreshCw, Edit, Loader2, Send, Download } from 'lucide-reac
 import { useAppContext } from '@/contexts/AppContext';
 import { callPlanningAgent, callShortAskAgent, callGenericAgent } from '@/services/dustApi';
 import { toast } from '@/hooks/use-toast';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -209,12 +210,19 @@ const DocumentExecution = () => {
                 </Button>
               </div>
             </div>
-            <Textarea
-              value={editablePlan}
-              onChange={(e) => setEditablePlan(e.target.value)}
-              disabled={!isEditMode}
-              className="flex-1 resize-none font-mono text-sm bg-muted/50"
-            />
+            {isEditMode ? (
+              <Textarea
+                value={editablePlan}
+                onChange={(e) => setEditablePlan(e.target.value)}
+                className="flex-1 resize-none font-mono text-sm bg-muted/50"
+              />
+            ) : (
+              <div className="flex-1 overflow-y-auto border border-border rounded-md bg-muted/50 p-4 prose prose-sm max-w-none dark:prose-invert">
+                <ReactMarkdown>
+                  {editablePlan}
+                </ReactMarkdown>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Editor and Chat */}
