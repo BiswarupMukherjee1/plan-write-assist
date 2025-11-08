@@ -1,1 +1,10 @@
 project_id = "giwmobyofmydstnrubsp"
+
+[functions.dust-planning]
+verify_jwt = false
+
+[functions.dust-short-ask]
+verify_jwt = false
+
+[functions.dust-generic]
+verify_jwt = false

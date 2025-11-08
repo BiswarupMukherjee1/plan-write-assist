@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Settings, ArrowRight, Loader2 } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
-import { callDustAgent } from '@/services/dustApi';
+import { callPlanningAgent } from '@/services/dustApi';
 import { toast } from '@/hooks/use-toast';
 import SettingsModal from '@/components/SettingsModal';
 
@@ -54,7 +54,7 @@ const DocumentInput = () => {
 
     setIsLoading(true);
     try {
-      const result = await callDustAgent(
+      const result = await callPlanningAgent(
         {
           workspaceId: credentials.workspaceId,
           apiKey: credentials.apiKey,

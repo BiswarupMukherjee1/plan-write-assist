@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, RefreshCw, Edit, Loader2, Send, Download } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
-import { callDustAgent } from '@/services/dustApi';
+import { callPlanningAgent, callShortAskAgent, callGenericAgent } from '@/services/dustApi';
 import { toast } from '@/hooks/use-toast';
 
 interface Message {
@@ -38,7 +38,7 @@ const DocumentExecution = () => {
 
     setIsRegenerating(true);
     try {
-      const result = await callDustAgent(
+      const result = await callPlanningAgent(
         {
           workspaceId: credentials.workspaceId,
           apiKey: credentials.apiKey,
@@ -76,7 +76,7 @@ const DocumentExecution = () => {
 
     setIsRefining(true);
     try {
-      const result = await callDustAgent(
+      const result = await callShortAskAgent(
         {
           workspaceId: credentials.workspaceId,
           apiKey: credentials.apiKey,
@@ -110,7 +110,7 @@ const DocumentExecution = () => {
     setIsChatLoading(true);
 
     try {
-      const result = await callDustAgent(
+      const result = await callGenericAgent(
         {
           workspaceId: credentials.workspaceId,
           apiKey: credentials.apiKey,
