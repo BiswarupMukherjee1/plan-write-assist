@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, RefreshCw, Edit, Loader2, Send, Download } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Edit, Loader2, Send, Download, Copy } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { callPlanningAgent, callShortAskAgent, callGenericAgent } from '@/services/dustApi';
 import { toast } from '@/hooks/use-toast';
@@ -198,6 +198,14 @@ const DocumentExecution = () => {
     }
   };
 
+  const handleCopyPlanToEditor = () => {
+    setDocumentText(editablePlan);
+    toast({
+      title: 'Plan Copied',
+      description: 'Execution plan copied to document editor.',
+    });
+  };
+
   const handleExport = () => {
     const blob = new Blob([documentText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -250,6 +258,15 @@ const DocumentExecution = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">Execution Plan</h2>
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyPlanToEditor}
+                  className="gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy to Editor
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
