@@ -212,10 +212,14 @@ const DocumentExecution = () => {
   };
 
   const handleApplyResponseToDocument = (content: string) => {
-    setDocumentText(content);
+    // Append the agent's response to the existing document with a separator
+    setDocumentText(prev => {
+      if (!prev.trim()) return content;
+      return prev + '\n\n---\n\n' + content;
+    });
     toast({
       title: 'Applied to Document',
-      description: 'Agent response has been copied to the document editor.',
+      description: 'Agent response has been appended to your document.',
     });
   };
 
