@@ -20,7 +20,7 @@ serve(async (req) => {
       );
     }
 
-    const url = `https://dust.tt/api/v1/w/${workspaceId}/agents/${agentId}/run`;
+    const url = `https://dust.tt/api/v1/w/${workspaceId}/assistant/conversations`;
     
     console.log('Calling Dust Planning Agent:', { workspaceId, agentId, textLength: text.length });
 
@@ -31,9 +31,22 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        input: {
-          text,
+        title: null,
+        visibility: 'unlisted',
+        message: {
+          content: text,
+          mentions: [
+            {
+              configurationId: agentId,
+            },
+          ],
+          context: {
+            timezone: 'UTC',
+            username: 'User',
+            origin: 'api',
+          },
         },
+        blocking: true,
       }),
     });
 
@@ -49,14 +62,23 @@ serve(async (req) => {
     const data = await response.json();
     console.log('Dust API response received');
 
-    // Extract the text content from the response
+    // Extract the agent's response content
     let content = '';
-    if (data.actions && data.actions[0] && data.actions[0].content) {
-      content = data.actions[0].content;
-    } else {
-      console.error('Unexpected response format:', data);
+    if (data.conversation?.content) {
+      // For blocking mode, the response contains the full conversation
+      const agentMessages = data.conversation.content.filter((msg: any) => 
+        msg.type === 'agent_message' && msg.content
+      );
+      
+      if (agentMessages.length > 0) {
+        content = agentMessages[agentMessages.length - 1].content;
+      }
+    }
+
+    if (!content) {
+      console.error('No content found in response:', JSON.stringify(data));
       return new Response(
-        JSON.stringify({ error: 'Unexpected response format from Dust API' }),
+        JSON.stringify({ error: 'No content returned from Dust API' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
